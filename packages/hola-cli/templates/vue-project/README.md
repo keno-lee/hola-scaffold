@@ -1,0 +1,1 @@
+npm run dev -- --module='philippines,china'

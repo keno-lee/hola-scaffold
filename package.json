@@ -1,0 +1,12 @@
+{
+  "name": "hola-scaffold",
+  "author": "keno",
+  "private": false,
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "publish": "lerna publish"
+  },
+  "devDependencies": {
+    "lerna": "^3.4.0"
+  }
+}

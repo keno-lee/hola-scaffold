@@ -1,0 +1,50 @@
+// 所有颜色变量
+
+// 主题色
+$color-primary: #ff6300;
+// 中性色
+$color-default: #333; // 暗灰（用于导航标题、重要标题、重要文本）
+$color-secondary: #333; // 暗灰（用于次要标题、次要文本）
+$color-tertiary: #999; // 中灰（用于列表标题、次要文本、提示文本、弹窗正文、声明/备注文本）
+$color-tabbar: #bababa; // 极少使用（用于底部Tab栏icon）
+$color-disabled: #d4d4d4; // 淡灰（用于置灰按钮/icon/文本、内容占位文本、优惠券列表、深色分割线(页面分割较少的情况)）
+$color-separate: #eee; // 浅色分割线(页面分割较多的情况)
+$color-bg-default: #f5f5f5; // 默认背景色、卡片色
+$color-white: #fff; // 白色
+// 辅助色
+$color-success: #23c78e; // 成功操作
+$color-danger: #ff6262; // 危险操作（用于icon、标签、提示性文本气泡、小红点、报错、警告）
+$color-warning: #ffc625; // 警告
+$color-link: #0089ec; // 链接颜色
+
+/**
+* 文字主题色：      
+* .kn-ft 开头
+*/
+.kn-ft-primary {
+  color: $color-primary;
+}
+.kn-fill-primary {
+  fill: $color-primary;
+}
+.kn-stroke-primary {
+  stroke: $color-primary;
+}
+
+// 默认
+.kn-ft-default {
+  color: $color-default;
+}
+.kn-ft-tertiary {
+  color: $color-tertiary;
+}
+/**
+* 背景主题色：
+* .kn-bg 开头
+*/
+.kn-bg-primary {
+  background-color: $color-primary;
+}
+.kn-bg-white {
+  background-color: $color-white;
+}
