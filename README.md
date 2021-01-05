@@ -83,3 +83,13 @@ Premajor (1.0.0-alpha.0) - 预发布主要
 Custom Prerelease - 自定义预发布
 Custom Version - 自定义版本
 ```
+
+## 发布流程
+
+`$ git add .`
+
+`$ git commit`
+
+`$ lerna changed`
+
+`$ lerna publish`
