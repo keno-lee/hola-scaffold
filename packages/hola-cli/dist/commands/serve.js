@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const hola_cli_service_1 = require("hola-cli-service");
 const chalk = require('chalk');
 class ServeCommand {
     constructor() {
@@ -11,13 +12,13 @@ class ServeCommand {
             .usage(`\n${chalk.cyan('用法示例:')} \n  hola serve -m="${chalk.cyan.bold('<moduleName1>')},${chalk.cyan.bold('<moduleName2>')},..."`)
             .options('m', {
             alias: 'modules',
-            describe: 'the modules you would like to serve',
-            demandOption: false,
+            describe: '你想要操作的目标模块集合',
+            demandOption: false
         });
     }
     handler(args) {
-        serve(args);
-        // loadCommand('serve', 'hola-cli-service').serve(args);
+        console.log(args);
+        hola_cli_service_1.serve(args);
     }
 }
 module.exports = new ServeCommand();

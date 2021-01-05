@@ -14,7 +14,7 @@ class CreateCommand implements CommandModule {
     return argv
       .usage(`\n${chalk.cyan('用法示例:')} \n  hola create ${chalk.cyan.bold('<projectName>')}`) // usage:
       .demandCommand(1, chalk.red('warning: 需要指定 1 个 <项目名> 才能继续')) // warning:
-      .command('myApp', '=>  create a new project called myApp', () => {}, this.handler); // Scaffolds:
+      .command('myApp', '=>  创建一个名称为myApp的项目', () => {}, this.handler); // Scaffolds: create a new project called myApp
   }
 
   // 必须使用箭头函数，否则无法找到this
@@ -34,9 +34,11 @@ class CreateCommand implements CommandModule {
         name: 'framework',
         message: 'framework choose',
         choices: [
-          { name: 'vue', value: 'vue' },
-          // { name: 'react', value: 'react' } // 暂时不支持react
-        ],
+          { name: 'Vue', value: 'vue' }
+          // { name: 'Vue后台管理系统', value: 'vueAdmin' }, // stage2 暂不支持
+          // { name: 'Flutter', value: 'flutter' }, // stage2 暂不支持
+          // { name: 'react', value: 'react' } // stage2 暂不支持
+        ]
       },
       // {
       //   type: 'input',
@@ -48,8 +50,8 @@ class CreateCommand implements CommandModule {
       {
         type: 'input',
         name: 'projectDescription',
-        message: 'project desc:',
-      },
+        message: 'project desc:'
+      }
       // {
       //   type: 'input',
       //   name: 'projectDescription',

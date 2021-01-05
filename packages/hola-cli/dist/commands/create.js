@@ -24,7 +24,7 @@ class CreateCommand {
         return argv
             .usage(`\n${chalk_1.default.cyan('用法示例:')} \n  hola create ${chalk_1.default.cyan.bold('<projectName>')}`) // usage:
             .demandCommand(1, chalk_1.default.red('warning: 需要指定 1 个 <项目名> 才能继续')) // warning:
-            .command('myApp', '=>  create a new project called myApp', () => { }, this.handler); // Scaffolds:
+            .command('myApp', '=>  创建一个名称为myApp的项目', () => { }, this.handler); // Scaffolds: create a new project called myApp
     }
     getAnswers() {
         const questions = [
@@ -33,8 +33,11 @@ class CreateCommand {
                 name: 'framework',
                 message: 'framework choose',
                 choices: [
-                    { name: 'vue', value: 'vue' },
-                ],
+                    { name: 'Vue', value: 'vue' }
+                    // { name: 'Vue后台管理系统', value: 'vueAdmin' }, // stage2 暂不支持
+                    // { name: 'Flutter', value: 'flutter' }, // stage2 暂不支持
+                    // { name: 'react', value: 'react' } // stage2 暂不支持
+                ]
             },
             // {
             //   type: 'input',
@@ -46,8 +49,22 @@ class CreateCommand {
             {
                 type: 'input',
                 name: 'projectDescription',
-                message: 'project desc:',
-            },
+                message: 'project desc:'
+            }
+            // {
+            //   type: 'input',
+            //   name: 'projectDescription',
+            //   message: 'project desc:',
+            // },
+            // {
+            //   type: 'list',
+            //   name: 'applicationType',
+            //   message: 'application type',
+            //   choices: [
+            //     { name: 'Single Page Application', value: 'single' },
+            //     { name: 'Multi Page Application', value: 'multi' }
+            //   ]
+            // }
         ];
         return inquirer_1.default.prompt(questions).then((answers) => answers);
     }

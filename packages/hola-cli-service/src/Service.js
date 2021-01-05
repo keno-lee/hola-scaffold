@@ -2,8 +2,8 @@ const serve = require('./commands/serve');
 const build = require('./commands/build');
 const path = require('path');
 const chalk = require('chalk');
-const { getConfig, getDevServer, getConfigArray } = require('./config/index');
-const merge = require('webpack-merge');
+const { getDevServer, getConfigArray } = require('./config/index');
+// const merge = require('webpack-merge')
 
 const fs = require('fs');
 module.exports = class Service {
@@ -11,24 +11,33 @@ module.exports = class Service {
     this.context = context;
   }
 
-  loadUserOption() {
-    // 初始化加载用户数据 hola.config.js
-    const jsConfigPath = path.resolve(this.context, 'hola.config.js');
-    try {
-      this.userOption = loadConfig(jsConfigPath);
-    } catch (e) {
-      if (e.code !== 'MODULE_NOT_FOUND') {
-        // error(`Error loading ${chalk.bold('hola.config.js')}:`);
-        console.log(`   ${chalk.red('警告: ')}`);
-        console.log(`   ${chalk.bold('hola.config.js')} 配置文件加载失败:`);
-        throw e;
+  /**
+   * 加载用户配置(hola.config.js)
+   */
+  async loadUserOption() {
+    return new Promise((resolve, reject) => {
+      // 初始化加载用户数据 hola.config.js
+      const jsConfigPath = path.resolve(this.context, 'hola.config.js');
+      try {
+        this.userOption = loadConfig(jsConfigPath);
+        resolve();
+      } catch (e) {
+        if (e.code === 'MODULE_NOT_FOUND') {
+          console.log(`   ${chalk.red('警告: 配置数据加载失败!')}`);
+          console.log();
+          console.log(`   ${chalk.bold('hola.config.js')} 未找到该文件!!!`);
+          console.log();
+        } else {
+          throw e;
+        }
       }
-    }
+    });
   }
 
   /**
-   * @param {Object} allModule
-   * @returns {array} webpackConfig[]
+   * 获取目标模块配置
+   * @param {Object} allModule 模块集合
+   * @returns {array} webpackConfig[] 配置集合
    */
   getTargetModulesConfigs(argsModules) {
     if (argsModules.length <= 0) {
@@ -45,34 +54,43 @@ module.exports = class Service {
     return targetModulesConfigs;
   }
 
-  init(args) {
+  /**
+   * 初始化配置
+   * @param {Object} args 命令行参数
+   */
+  async init(args) {
     console.log();
-    console.log(chalk.green.bold(`收集配置数据中...`));
+    console.log(chalk.green.bold(`   加载配置数据中...`));
     console.log();
 
-    this.loadUserOption();
+    await this.loadUserOption();
+
     // 目标参数模块 [china, us]
     const argsModules = args && args.modules ? args.modules.split(',') : [];
     this.targetModules = this.getTargetModulesConfigs(argsModules);
   }
 
-  async run(command, args, outputDir) {
-    this.init(args);
+  /**
+   * 启动webpack服务
+   * @param {String} command 'serve' | 'build'
+   * @param {String} args.modules 命令行参数-目标模块集合，如果是空，则全部打包
+   * @param {Object} args.environment 命令行参数-运行环境，枚举:development:开发环境;test:测试环境;production:生产环境·
+   */
+  async run(command, args) {
+    await this.init(args);
 
     if (command === 'serve') {
-      const configs = getConfigArray(this.targetModules, false);
+      const configs = getConfigArray(this.targetModules, 'development');
       const devServer = await getDevServer();
-
-      serve(configs, devServer);
-      // .catch((err) => {
-      //   console.log(err);
-      //   process.exit(1);
-      // });
+      serve(configs, devServer, this.targetModules);
     }
 
     if (command === 'build') {
-      const configs = getConfigArray(this.targetModules, true, outputDir);
-      build(configs);
+      const configs = getConfigArray(this.targetModules, args.environment);
+      await build(configs);
+
+      console.log(chalk.green.bold(`App build completed!`));
+      console.log();
     }
   }
 };
@@ -87,7 +105,7 @@ const loadConfig = (configPath) => {
   if (!fileConfig || typeof fileConfig !== 'object') {
     error(
       `Error loading ${chalk.bold(
-        'vue.config.js'
+        'hola.config.js'
       )}: should export an object or a function that returns object.`
     );
     fileConfig = null;

@@ -32,7 +32,7 @@ class CreateCommand {
                 name: 'framework',
                 message: 'framework choose',
                 choices: [
-                    { name: 'vue', value: 'vue' },
+                    { name: 'Vue移动端', value: 'vue' },
                 ],
             },
         ];

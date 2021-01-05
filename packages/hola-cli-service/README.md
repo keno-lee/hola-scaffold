@@ -19,15 +19,15 @@ webpack 支持 multiCompiler，但是不会并行执行
 并行处理使用第三方解决方案，例如 parallel-webpack
 
 ```js
-var webpack = require('webpack');
+var webpack = require('webpack')
 
 webpack(
   [
     { entry: './index1.js', output: { filename: 'bundle1.js' } },
-    { entry: './index2.js', output: { filename: 'bundle2.js' } },
+    { entry: './index2.js', output: { filename: 'bundle2.js' } }
   ],
   (err, stats) => {
-    process.stdout.write(stats.toString() + '\n');
+    process.stdout.write(stats.toString() + '\n')
   }
-);
+)
 ```

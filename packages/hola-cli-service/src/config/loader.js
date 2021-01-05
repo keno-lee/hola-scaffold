@@ -1,41 +1,34 @@
-const path = require('path');
+const path = require('path')
+
+function resolve(dir) {
+  return path.join(process.cwd(), dir)
+}
+
 const vueLoader = () => {
   return {
     test: /\.vue$/,
-    use: [{ loader: 'cache-loader' }, { loader: 'vue-loader' }],
-  };
-};
+    use: [{ loader: 'cache-loader' }, { loader: 'vue-loader' }]
+  }
+}
 
-const imageLoader = (moduleName) => {
+const imageLoader = () => {
   return {
     test: /\.(png|jpe?g|gif|webp)(\?.*)?$/,
     use: [
       {
         loader: 'url-loader',
         options: {
+          // 防止出现 <img :src="[object Module]"/>
+          esModule: false,
           limit: 4096,
-          name: `${moduleName}/img/[name].[hash:8].[ext]`,
-        },
-      },
-    ],
-  };
-};
+          name: `img/[name].[hash:8].[ext]`
+        }
+      }
+    ]
+  }
+}
 
-const svgLoader = (moduleName) => {
-  return {
-    test: /\.(svg)(\?.*)?$/,
-    use: [
-      {
-        loader: 'file-loader',
-        options: {
-          name: `${moduleName}/svg/[name].[hash:8].[ext]`,
-        },
-      },
-    ],
-  };
-};
-
-const mediaLoader = (moduleName) => {
+const mediaLoader = () => {
   return {
     test: /\.(mp4|webm|ogg|mp3|wac|flac|aac)(\?.*)?$/,
     use: [
@@ -44,14 +37,14 @@ const mediaLoader = (moduleName) => {
         options: {
           limit: 4096,
           context: path.resolve(process.cwd(), './app'),
-          name: `${moduleName}/media/[name].[hash:8].[ext]`,
-        },
-      },
-    ],
-  };
-};
+          name: `media/[name].[hash:8].[ext]`
+        }
+      }
+    ]
+  }
+}
 
-const fontLoader = (moduleName) => {
+const fontLoader = () => {
   return {
     test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/i,
     use: [
@@ -60,117 +53,148 @@ const fontLoader = (moduleName) => {
         options: {
           limit: 4096,
           context: path.resolve(process.cwd(), './app'),
-          name: `${moduleName}/fonts/[name].[hash:8].[ext]`,
-        },
-      },
-    ],
-  };
-};
+          name: `fonts/[name].[hash:8].[ext]`
+        }
+      }
+    ]
+  }
+}
+
+const svgLoader = () => {
+  return {
+    test: /\.(svg)(\?.*)?$/,
+    use: [
+      {
+        loader: 'file-loader',
+        options: {
+          name: `svg/[name].[hash:8].[ext]`
+        }
+      }
+    ]
+  }
+}
 
 const pugLoader = () => {
   return {
     test: /\.pug$/,
-    use: [{ loader: 'raw-loader' }, { loader: 'pug-plain-loader' }],
-  };
-};
+    use: [{ loader: 'raw-loader' }, { loader: 'pug-plain-loader' }]
+  }
+}
 
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 const miniCssItem = {
   loader: MiniCssExtractPlugin.loader,
-  options: { sourceMap: false, publicPath: '../', hmr: false },
-};
+  options: { sourceMap: false, publicPath: '../', hmr: false }
+}
 // 层叠样式表加载
-const styleItem = { loader: 'style-loader', options: { sourceMap: false } };
+const styleItem = { loader: 'style-loader', options: { sourceMap: false } }
 // vue层叠样式表加载
-const vueStyleItem = { loader: 'vue-style-loader', options: { sourceMap: false } };
+const vueStyleItem = { loader: 'vue-style-loader', options: { sourceMap: false } }
 // 将 CSS 转化成 CommonJS 模块
-const cssItem = { loader: 'css-loader', options: { sourceMap: false } };
+const cssItem = { loader: 'css-loader', options: { sourceMap: false } }
 // 将 postcss 编译成 CSS
 const postcssItem = {
   loader: 'postcss-loader',
-  options: { sourceMap: false, plugins: [require('autoprefixer')] },
-};
-// sassloader
-const sassItem = { loader: 'sass-loader', options: { sourceMap: false } };
-// lessLoader
-const lessItem = { loader: 'less-loader', options: { sourceMap: false } };
-// stylusLoader
-const stylusItem = { loader: 'stylus-loader', options: { sourceMap: false } };
+  options: { sourceMap: false, plugins: [require('autoprefixer')] }
+}
 
-const cssLoader = (isProd = false, isVue = false) => {
+// sassloader
+const sassItem = {
+  loader: 'sass-loader',
+  options: {
+    sourceMap: false,
+    sassOptions: {
+      outputStyle: 'expanded',
+      compress: false
+    }
+  }
+}
+// lessLoader
+const lessItem = { loader: 'less-loader', options: { sourceMap: false } }
+// stylusLoader
+const stylusItem = { loader: 'stylus-loader', options: { sourceMap: false } }
+
+const px2remItem = { loader: 'px2rem-loader', options: { remUnit: 100, remPrecision: 8 } }
+
+const cssLoader = (prodMode = false, isVue = false) => {
   let rule = {
     test: /\.css$/i,
     use: [
-      isProd ? miniCssItem : isVue ? vueStyleItem : styleItem, // 生产环境用分割css，开发用层叠样式表
+      prodMode ? miniCssItem : isVue ? vueStyleItem : styleItem, // 生产环境用分割css，开发用层叠样式表
       cssItem,
       postcssItem,
-    ],
-  };
-  return rule;
-};
+      px2remItem
+    ]
+  }
+  return rule
+}
 
-const postcssLoader = (isProd = false, isVue = false) => {
+// 自动添加css前缀
+const postcssLoader = (prodMode = false, isVue = false) => {
   return {
     test: /\.p(ost)?css$/,
     use: [
-      isProd ? miniCssItem : isVue ? vueStyleItem : styleItem, // 生产环境用分割css，开发用层叠样式表
+      prodMode ? miniCssItem : isVue ? vueStyleItem : styleItem, // 生产环境用分割css，开发用层叠样式表
       cssItem,
       postcssItem,
-    ],
-  };
-};
+      px2remItem
+    ]
+  }
+}
 
-const sassLoader = (isProd = false, isVue = false) => {
+const sassLoader = (prodMode = false, isVue = false) => {
   return {
     test: /\.(sass)|(scss)$/,
     use: [
-      isProd ? miniCssItem : isVue ? vueStyleItem : styleItem, // 生产环境用分割css，开发用层叠样式表
+      prodMode ? miniCssItem : isVue ? vueStyleItem : styleItem, // 生产环境用分割css，开发用层叠样式表
       cssItem,
       postcssItem,
-      sassItem,
-    ],
-  };
-};
+      px2remItem,
+      sassItem
+    ]
+  }
+}
 
-const lessLoader = (isProd = false, isVue = false) => {
+const lessLoader = (prodMode = false, isVue = false) => {
   return {
     test: /\.less$/,
     use: [
-      isProd ? miniCssItem : isVue ? vueStyleItem : styleItem, // 生产环境用分割css，开发用层叠样式表
+      prodMode ? miniCssItem : isVue ? vueStyleItem : styleItem, // 生产环境用分割css，开发用层叠样式表
       cssItem,
       postcssItem,
-      lessItem,
-    ],
-  };
-};
+      px2remItem,
+      lessItem
+    ]
+  }
+}
 
-const stylusLoader = (isProd = false, isVue = false) => {
+const stylusLoader = (prodMode = false, isVue = false) => {
   return {
     test: /\.styl(us)?$/,
     use: [
-      isProd ? miniCssItem : isVue ? vueStyleItem : styleItem, // 生产环境用分割css，开发用层叠样式表
+      prodMode ? miniCssItem : isVue ? vueStyleItem : styleItem, // 生产环境用分割css，开发用层叠样式表
       cssItem,
       postcssItem,
-      stylusItem,
-    ],
-  };
-};
+      stylusItem
+    ]
+  }
+}
 
 const jsLoader = () => {
   return {
-    test: /\.m?jsx?$/,
-    use: [
-      {
-        loader: 'babel-loader',
-        // options: {
-        //   presets: ['@babel/preset-env'],
-        //   plugins: ['@babel/plugin-syntax-dynamic-import']
-        // }
-      },
-    ],
-  };
-};
+    test: /\.js$/,
+    loader: 'babel-loader',
+    include: [resolve('app'), resolve('common'), resolve('node_modules/knife')]
+    // options: {
+    //   presets: [
+    //     {
+    //       plugins: ['@babel/plugin-proposal-class-properties']
+    //     }
+    //   ]
+    // }
+  }
+}
 
 const eslintLoader = () => {
   return {
@@ -182,34 +206,20 @@ const eslintLoader = () => {
         loader: 'eslint-loader',
         options: {
           extensions: ['.js', '.jsx', '.vue'],
-          cache: true,
-        },
-      },
-    ],
-  };
-};
+          cache: false
+        }
+      }
+    ]
+  }
+}
 
 /**
  * 获取rules
  * @returns {Array} rule[]
  */
-module.exports = getRules = (isVue, isProd, moduleName) => {
-  let rules = [
-    vueLoader(),
-    imageLoader(moduleName),
-    svgLoader(moduleName),
-    mediaLoader(moduleName),
-    fontLoader(moduleName),
-    cssLoader(isProd, isVue),
-    postcssLoader(isProd, isVue),
-    sassLoader(isProd, isVue),
-    jsLoader(),
-    eslintLoader(),
-  ];
-
-  if (!isVue) {
-    rules.unshift();
-  }
-
-  return rules;
-};
+module.exports = getRules = prodMode => {
+  // TODO 后期接入react，暂时写死
+  const isVue = true
+  let rules = [vueLoader(), imageLoader(), svgLoader(), mediaLoader(), fontLoader(), cssLoader(prodMode, isVue), postcssLoader(prodMode, isVue), sassLoader(prodMode, isVue), jsLoader(), eslintLoader()]
+  return rules
+}

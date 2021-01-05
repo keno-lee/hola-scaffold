@@ -23,7 +23,8 @@ class BuildCommand {
             .usage(`\n${chalk.cyan('用法示例:')} \n  hola build -m="${chalk.cyan.bold('<moduleName1>')},${chalk.cyan.bold('<moduleName2>')},..."`)
             .options('m', {
             alias: 'modules',
-            describe: 'the modules you would like to build',
+            // describe: 'the modules you would like to build',
+            describe: '你想要操作的目标模块集合',
             demandOption: false,
         });
     }
@@ -35,8 +36,8 @@ class BuildCommand {
                 // message: 'please choose which environment you want to build',
                 message: '请选择你要构建的环境',
                 choices: [
-                    { name: 'Test', value: 'debug' },
-                    { name: 'Production', value: 'dist' },
+                    { name: 'Test', value: 'test' },
+                    { name: 'Production', value: 'production' },
                 ],
             },
         ];

@@ -20,35 +20,57 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 // 用于在 webpack 构建期间优化、最小化 CSS文件
 const OptimizeCssnanoPlugin = require('@intervolga/optimize-cssnano-plugin');
+// 分析打包内容
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+// 拷贝资源到dist中
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const getRules = require('./loader');
 const merge = require('webpack-merge');
 
-// 获取webpack配置
-const getConfig = (option, isProd, outputDir = 'dist') => {
-  const { moduleName } = option;
+/**
+ * 获取webpack配置
+ * @param {Object} option 配置
+ * @param {environment} 代码运行环境
+ * @param {dest} 打包文件夹名称，暂时写死为dist，stage2 根据生产还是测试判断目录
+ */
+const getConfig = (option, { environment = 'development', dest = 'dist' } = {}) => {
+  // 获取模块名字
+  const { moduleName, moduleEntry, publicPath = {}, env = {} } = option;
+  // production 和 test 均使用生产环境的配置打包
+  const isProd = environment === 'production' || environment === 'test';
+
+  const publicPathMap = {
+    production: publicPath.prod || '/',
+    test: publicPath.test || '/',
+    development: '/'
+  };
 
   let baseConfig = {
+    // 会在 process.env.NODE_ENV中注入环境变量
     mode: isProd ? 'production' : 'development',
     context: process.cwd(),
     devtool: isProd ? 'source-map' : 'cheap-module-eval-source-map',
     entry: {
-      [moduleName]: option.moduleEntry,
+      [moduleName]: moduleEntry
     },
     output: {
-      path: path.join(process.cwd(), outputDir),
-      filename: isProd ? '[name]/js/bundle.[contenthash:8].js' : '[name]/js/bundle.js',
-      publicPath: option.cdn ? option.cdn : '/', // CDN服务器地址
-      chunkFilename: `${moduleName}${isProd ? '/js/[name].[contenthash:8].js' : '/js/[name].js'}`,
-      globalObject: "(typeof self !== 'undefined' ? self : this)",
+      // /*/*/projectname/dist
+      path: path.join(process.cwd(), dest, moduleName),
+      filename: isProd ? 'js/bundle.[contenthash:8].js' : 'js/bundle.js',
+      // /* webpackChunkName: "about" */ => /js/about.js
+      chunkFilename: `${isProd ? 'js/[name].[contenthash:8].js' : 'js/[name].js'}`,
+      // CDN服务器地址
+      publicPath: publicPathMap[environment],
+      globalObject: "(typeof self !== 'undefined' ? self : this)"
     },
     resolve: {
       alias: {
-        '@': path.join(process.cwd(), 'app'),
+        '@common': path.join(process.cwd(), 'common'),
+        '@app': path.join(process.cwd(), 'app')
       },
       extensions: ['.mjs', '.js', '.jsx', '.vue', '.json', '.wasm'],
-      modules: ['node_modules', path.join(process.cwd(), 'node_modules')],
+      modules: ['node_modules', path.join(process.cwd(), 'node_modules')]
     },
     optimization: {
       splitChunks: {
@@ -57,16 +79,16 @@ const getConfig = (option, isProd, outputDir = 'dist') => {
             name: 'chunk-vendors',
             test: /[\\\/]node_modules[\\\/]/,
             priority: -10,
-            chunks: 'initial',
+            chunks: 'initial'
           },
           common: {
             name: 'chunk-common',
             minChunks: 2,
             priority: -20,
             chunks: 'initial',
-            reuseExistingChunk: true,
-          },
-        },
+            reuseExistingChunk: true
+          }
+        }
       },
       minimizer: [
         new TerserPlugin({
@@ -99,12 +121,12 @@ const getConfig = (option, isProd, outputDir = 'dist') => {
               unused: true,
               conditionals: true,
               dead_code: true,
-              evaluate: true,
+              evaluate: true
             },
-            mangle: { safari10: true },
-          },
-        }),
-      ],
+            mangle: { safari10: true }
+          }
+        })
+      ]
     },
     node: {
       setImmediate: false,
@@ -113,17 +135,17 @@ const getConfig = (option, isProd, outputDir = 'dist') => {
       fs: 'empty',
       net: 'empty',
       tls: 'empty',
-      child_process: 'empty',
+      child_process: 'empty'
     },
     module: {
       noParse: /^(vue|vue-router|vuex|vuex-router-sync)$/,
-      rules: getRules(true, isProd, moduleName),
+      rules: getRules(isProd)
     },
     plugins: [
       // webpack 内置插件，用于创建在编译时可以配置的全局常量
       new webpack.DefinePlugin({
-        'process.env.NODE_ENV': JSON.stringify(isProd ? 'production' : 'development'),
-        'process.env.BASE_URL': JSON.stringify('/'),
+        'process.env.CODE_ENV': JSON.stringify(environment),
+        ...env
       }),
       new VueLoaderPlugin(),
       new CaseSensitivePathsPlugin(),
@@ -132,11 +154,11 @@ const getConfig = (option, isProd, outputDir = 'dist') => {
           ':percent'
         )} (:elapsed seconds) ${moduleName} :msg `,
         clear: false,
-        summary: false, // 防止和friendly输出冲突
+        summary: false // 防止和friendly输出冲突
       }),
       new HtmlWebpackPlugin({
         template: path.join(process.cwd(), `app/${moduleName}/index.html`), // 模板路径
-        filename: `${moduleName}/index.html`, // 输出的html的文件名称
+        filename: `index.html`, // 输出的html的文件名称
         chunks: [moduleName, 'chunk-vendors', 'chunk-common'],
         // true：默认值，script标签位于html文件的 body 底部
         // body：script标签位于html文件的 body 底部（同 true）
@@ -149,30 +171,19 @@ const getConfig = (option, isProd, outputDir = 'dist') => {
               minifyJS: true, // 压缩内联js
               removeComments: true, // 移除注释
               collapseWhitespace: true, // 合并空格
-              removeAttributeQuotes: true, // 移除属性的引号
+              removeAttributeQuotes: true // 移除属性的引号
             }
-          : false,
-      }),
-      new BundleAnalyzerPlugin({
-        logLevel: 'warn',
-        openAnalyzer: false,
-        analyzerMode: 'static',
-        // analyzerMode: args.report ? 'static' : 'disabled',
-        reportFilename: `${moduleName}report.html`,
-        statsFilename: `${moduleName}report.json`,
-        // generateStatsFile: !!args['report-json'],
-        generateStatsFile: true,
-      }),
-    ],
+          : false
+      })
+    ]
   };
-
   if (isProd) {
     let prodPlugin = [
       new CleanWebpackPlugin({
-        cleanOnceBeforeBuildPatterns: path.join(process.cwd(), `${outputDir}/${moduleName}`),
+        cleanOnceBeforeBuildPatterns: path.join(process.cwd(), `${dest}/${moduleName}`)
       }),
       new MiniCssExtractPlugin({
-        filename: `${moduleName}/css/bundle.[contenthash:8].css`,
+        filename: `css/[name].[contenthash:8].css`
       }),
       new OptimizeCssnanoPlugin({
         sourceMap: false,
@@ -181,12 +192,32 @@ const getConfig = (option, isProd, outputDir = 'dist') => {
             'default',
             {
               discardComments: {
-                removeAll: true,
-              },
-            },
-          ],
-        },
+                removeAll: true
+              }
+            }
+          ]
+        }
       }),
+      new CopyWebpackPlugin({
+        patterns: [
+          {
+            from: path.join(process.cwd(), `public/${moduleName}`),
+            to: path.join(process.cwd(), `${dest}/${moduleName}/static`),
+            toType: 'dir'
+          }
+        ]
+      }),
+      // 打包分析
+      new BundleAnalyzerPlugin({
+        logLevel: 'warn',
+        openAnalyzer: false,
+        analyzerMode: 'static',
+        // analyzerMode: args.report ? 'static' : 'disabled',
+        reportFilename: `bundle-analysis-${moduleName}.html`
+        // statsFilename: `${moduleName}-report.json`,
+        // generateStatsFile: !!args['report-json'],
+        // generateStatsFile: true
+      })
     ];
     baseConfig.plugins = baseConfig.plugins.concat(prodPlugin);
   } else {
@@ -195,10 +226,11 @@ const getConfig = (option, isProd, outputDir = 'dist') => {
         options: {},
         multiStep: undefined,
         fullBuildTimeout: 200,
-        requestTimeout: 10000,
+        requestTimeout: 10000
       }),
-      new webpack.NamedModulesPlugin(),
-      new FriendlyErrorsWebpackPlugin(),
+      // 已被弃用
+      // new webpack.NamedModulesPlugin(),
+      new FriendlyErrorsWebpackPlugin()
     ];
     baseConfig.plugins = baseConfig.plugins.concat(devPlugin);
   }
@@ -210,7 +242,9 @@ const getConfig = (option, isProd, outputDir = 'dist') => {
 
 // 获取开发服务器配置
 const getDevServer = async function() {
-  const portfinder = require('portfinder'); // 端口号
+  // 端口号查找工具
+  const portfinder = require('portfinder');
+  // ip地址工具
   const address = require('address');
 
   portfinder.basePort = 1111; // 默认端口号
@@ -224,29 +258,30 @@ const getDevServer = async function() {
     clientLogLevel: 'none',
     // 当使用 HTML5 History API 时，任意的 404 响应都可能需要被替代为 index.html。通过传入以下启用
     historyApiFallback: {
-      disableDotRule: true,
+      disableDotRule: true
     },
 
     // 告诉服务器从哪里提供内容。只有在你想要提供静态文件时才需要。默认为使用当前工作目录作为提供内容的目录
-    contentBase: '/public',
-
+    // contentBase是用来指定被访问html页面所在目录的
+    // contentBase: '/public',
     // 告诉服务器观看devServer.contentBase选项提供的文件。文件更改将触发整个页面重新加载。
     watchContentBase: true,
-    hot: true, // 热模块替换
-    injectClient: false,
+
+    // 热模块替换
+    hot: true,
+    hotOnly: true,
     inline: true,
     // quiet: true,
-
     // Enable gzip compression of generated files.
     compress: true, // 压缩
     // It is important to tell WebpackDevServer to use the same "root" path
     // as we specified in the config. In development, we always serve from /.
-    publicPath: '/public/',
+    // devServer中的publicPath是用来本地服务拦截带publicPath开头的请求的
+    // publicPath: '/public',
     overlay: { warnings: false, errors: true },
     https: false,
-    open: false,
     host: host,
-    port: port,
+    port: port
   };
 
   // 合并用户配置
@@ -256,15 +291,11 @@ const getDevServer = async function() {
 /**
  *
  * @param {Array} modules [{moduleName: 'xx', moduleEntry: 'yy'}]
- * @param {boolean} isProd isProduction
+ * @param {String} environment 运行环境
  * @returns {Array} webpackConfig[]
  */
-const getConfigArray = (modules, isProd, outputDir) => {
-  let configArray = modules.map((moduleItem) => getConfig(moduleItem, isProd, outputDir));
-  // 只在第一个配置中加入插件，是为了防止多个进程多个输出
-  configArray[0].plugins = configArray[0].plugins.concat([
-    // new FriendlyErrorsWebpackPlugin()
-  ]);
+const getConfigArray = (modules, environment) => {
+  let configArray = modules.map((moduleItem) => getConfig(moduleItem, { environment }));
   return configArray;
 };
 

@@ -1,4 +1,4 @@
-module.exports = async (configs, devServer) => {
+module.exports = async (configs, devServer, targetModules) => {
   const Webpack = require('webpack');
   const WebpackDevServer = require('webpack-dev-server');
   const chalk = require('chalk');
@@ -24,6 +24,8 @@ module.exports = async (configs, devServer) => {
     // compiler hooks
     compiler.hooks.done.tap('hola-cli-service serve', (stats) => {
       if (stats.hasErrors()) {
+        console.log('编译报错');
+        console.log(stats);
         return;
       }
 
@@ -49,7 +51,13 @@ module.exports = async (configs, devServer) => {
       console.log();
       console.log(`  App running at:`);
       console.log(`  - Local:   ${chalk.cyan(`http://localhost:${devServer.port}/`)}`);
-      console.log(`  - Network: ${chalk.cyan(`http://${devServer.host}:${devServer.port}/`)}`);
+      targetModules.forEach((item) => {
+        console.log(
+          `  - Network: ${chalk.cyan(
+            `http://${devServer.host}:${devServer.port}/${item.moduleName}/`
+          )}`
+        );
+      });
       console.log();
 
       if (isFirstCompile) {
@@ -61,7 +69,7 @@ module.exports = async (configs, devServer) => {
       // resolve returned Promise
       // so other commands can do api.service.run('serve').then(...)
       resolve({
-        server,
+        server
       });
     });
 

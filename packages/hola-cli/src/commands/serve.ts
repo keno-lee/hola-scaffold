@@ -1,9 +1,7 @@
 import { CommandModule, Argv } from 'yargs';
-import { buiserveld } from 'hola-cli-service';
-import loadCommand from '../utils/loadCommand';
+import { serve } from 'hola-cli-service';
 
 const chalk = require('chalk');
-
 class ServeCommand implements CommandModule {
   public command = 'serve';
 
@@ -18,14 +16,14 @@ class ServeCommand implements CommandModule {
       )
       .options('m', {
         alias: 'modules',
-        describe: 'the modules you would like to serve',
-        demandOption: false,
+        describe: '你想要操作的目标模块集合',
+        demandOption: false
       });
   }
 
   public handler(args) {
+    console.log(args);
     serve(args);
-    // loadCommand('serve', 'hola-cli-service').serve(args);
   }
 }
 

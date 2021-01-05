@@ -31,7 +31,7 @@ class CreateCommand implements CommandModule {
         name: 'framework',
         message: 'framework choose',
         choices: [
-          { name: 'vue', value: 'vue' },
+          { name: 'Vue移动端', value: 'vue' },
           // { name: 'react', value: 'react' } // 暂时不支持react
         ],
       },
