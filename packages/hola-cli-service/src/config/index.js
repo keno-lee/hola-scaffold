@@ -36,7 +36,7 @@ const merge = require('webpack-merge');
  */
 const getConfig = (option, { environment = 'development', dest = 'dist' } = {}) => {
   // 获取模块名字
-  const { moduleName, moduleEntry, publicPath = {}, env = {} } = option;
+  const { moduleName, moduleEntry, publicPath = {}, env = {}, transpileDependencies = [] } = option;
   // production 和 test 均使用生产环境的配置打包
   const isProd = environment === 'production' || environment === 'test';
 
@@ -139,7 +139,7 @@ const getConfig = (option, { environment = 'development', dest = 'dist' } = {}) 
     },
     module: {
       noParse: /^(vue|vue-router|vuex|vuex-router-sync)$/,
-      rules: getRules(isProd)
+      rules: getRules(isProd, transpileDependencies)
     },
     plugins: [
       // webpack 内置插件，用于创建在编译时可以配置的全局常量
