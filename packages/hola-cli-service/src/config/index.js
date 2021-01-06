@@ -23,7 +23,7 @@ const OptimizeCssnanoPlugin = require('@intervolga/optimize-cssnano-plugin');
 // 分析打包内容
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 // 拷贝资源到dist中
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+// const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const getRules = require('./loader');
 const merge = require('webpack-merge');
@@ -201,15 +201,15 @@ const getConfig = (
           ]
         }
       }),
-      new CopyWebpackPlugin({
-        patterns: [
-          {
-            from: path.join(process.cwd(), `public/${moduleName}`),
-            to: path.join(process.cwd(), `${dest}/${moduleName}/static`),
-            toType: 'dir'
-          }
-        ]
-      }),
+      // new CopyWebpackPlugin({
+      //   patterns: [
+      //     {
+      //       from: path.join(process.cwd(), `public/${moduleName}`),
+      //       to: path.join(process.cwd(), `${dest}/${moduleName}/static`),
+      //       toType: 'dir'
+      //     }
+      //   ]
+      // }),
       // 打包分析
       new BundleAnalyzerPlugin({
         logLevel: 'warn',
