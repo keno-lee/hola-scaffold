@@ -1,6 +1,6 @@
 {
   "name": "hola-cli",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "keywords": [],
   "author": "keno",
@@ -18,7 +18,7 @@
     "async": "^3.2.0",
     "chalk": "^2.4.1",
     "escodegen": "^1.14.1",
-    "hola-cli-service": "^0.0.5",
+    "hola-cli-service": "^0.0.6",
     "inquirer": "^7.1.0",
     "path": "^0.12.7",
     "replace": "^1.2.0",
