@@ -19,7 +19,13 @@ module.exports = class Service {
       // 初始化加载用户数据 hola.config.js
       const jsConfigPath = path.resolve(this.context, 'hola.config.js');
       try {
-        this.userOption = loadConfig(jsConfigPath);
+        // 获取hola.config
+        const holaConfig = loadConfig(jsConfigPath);
+        // 模块配置数组
+        this.modulesOptionsArr = holaConfig.configs;
+        delete holaConfig.configs;
+        // 获取公共配置
+        this.commonOptionObj = holaConfig;
         resolve();
       } catch (e) {
         if (e.code === 'MODULE_NOT_FOUND') {
@@ -40,12 +46,13 @@ module.exports = class Service {
    * @returns {array} webpackConfig[] 配置集合
    */
   getTargetModulesConfigs(argsModules) {
+    // 如果目标模块为空，则返回全部模块
     if (argsModules.length <= 0) {
-      return this.userOption.configs;
+      return this.modulesOptionsArr;
     }
     let targetModulesConfigs = [];
     argsModules.map((argModule) => {
-      this.userOption.configs.map((config) => {
+      this.modulesOptionsArr.map((config) => {
         if (config.moduleName === argModule) {
           targetModulesConfigs.push(config);
         }
@@ -80,13 +87,19 @@ module.exports = class Service {
     await this.init(args);
 
     if (command === 'serve') {
-      const configs = getConfigArray(this.targetModules, 'development');
+      const configs = getConfigArray(this.targetModules, {
+        ...this.commonOptionObj,
+        environment: 'development'
+      });
       const devServer = await getDevServer();
       serve(configs, devServer, this.targetModules);
     }
 
     if (command === 'build') {
-      const configs = getConfigArray(this.targetModules, args.environment);
+      const configs = getConfigArray(this.targetModules, {
+        ...this.commonOptionObj,
+        environment: args.environment
+      });
       await build(configs);
 
       console.log(chalk.green.bold(`App build completed!`));

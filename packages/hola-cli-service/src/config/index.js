@@ -30,13 +30,16 @@ const merge = require('webpack-merge');
 
 /**
  * 获取webpack配置
- * @param {Object} option 配置
+ * @param {Object} moduleOption 模块配置对象
  * @param {environment} 代码运行环境
  * @param {dest} 打包文件夹名称，暂时写死为dist，stage2 根据生产还是测试判断目录
  */
-const getConfig = (option, { environment = 'development', dest = 'dist' } = {}) => {
+const getConfig = (
+  moduleOption,
+  { environment = 'development', dest = 'dist', transpileDependencies = [] } = {}
+) => {
   // 获取模块名字
-  const { moduleName, moduleEntry, publicPath = {}, env = {}, transpileDependencies = [] } = option;
+  const { moduleName, moduleEntry, publicPath = {}, env = {} } = moduleOption;
   // production 和 test 均使用生产环境的配置打包
   const isProd = environment === 'production' || environment === 'test';
 
@@ -294,8 +297,8 @@ const getDevServer = async function() {
  * @param {String} environment 运行环境
  * @returns {Array} webpackConfig[]
  */
-const getConfigArray = (modules, environment) => {
-  let configArray = modules.map((moduleItem) => getConfig(moduleItem, { environment }));
+const getConfigArray = (modules, commonOption) => {
+  let configArray = modules.map((moduleOption) => getConfig(moduleOption, commonOption));
   return configArray;
 };
 
