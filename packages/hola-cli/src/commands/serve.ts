@@ -26,4 +26,4 @@ class ServeCommand implements CommandModule {
   }
 }
 
-export default new ServeCommand();
+module.exports = new ServeCommand();

@@ -44,5 +44,4 @@ class BuildCommand {
         return inquirer_1.default.prompt(questions).then((answers) => answers);
     }
 }
-// module.exports = new BuildCommand();
-exports.default = new BuildCommand();
+module.exports = new BuildCommand();

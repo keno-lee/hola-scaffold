@@ -20,4 +20,4 @@ class ServeCommand {
         hola_cli_service_1.serve(args);
     }
 }
-exports.default = new ServeCommand();
+module.exports = new ServeCommand();

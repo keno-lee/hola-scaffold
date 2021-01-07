@@ -49,5 +49,4 @@ class BuildCommand implements CommandModule {
   }
 }
 
-// module.exports = new BuildCommand();
-export default new BuildCommand();
+module.exports = new BuildCommand();
