@@ -17,8 +17,7 @@ class ServeCommand {
         });
     }
     handler(args) {
-        console.log(args);
         hola_cli_service_1.serve(args);
     }
 }
-module.exports = new ServeCommand();
+exports.default = new ServeCommand();

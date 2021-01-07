@@ -10,7 +10,7 @@
 
 2. 配置 hola.config.js
 
-> ```json
+> ```js
 >  configs: [
 >    {
 >      moduleName: 'china',

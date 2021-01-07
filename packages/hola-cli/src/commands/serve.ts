@@ -22,9 +22,8 @@ class ServeCommand implements CommandModule {
   }
 
   public handler(args) {
-    console.log(args);
     serve(args);
   }
 }
 
-module.exports = new ServeCommand();
+export default new ServeCommand();

@@ -26,7 +26,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 // const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const getRules = require('./loader');
-const merge = require('webpack-merge');
+// const merge = require('webpack-merge');
 
 /**
  * 获取webpack配置
@@ -195,22 +195,13 @@ const getConfig = (
             'default',
             {
               discardComments: {
+                // 删除全部注释
                 removeAll: true
               }
             }
           ]
         }
       }),
-      // new CopyWebpackPlugin({
-      //   patterns: [
-      //     {
-      //       from: path.join(process.cwd(), `public/${moduleName}`),
-      //       to: path.join(process.cwd(), `${dest}/${moduleName}/static`),
-      //       toType: 'dir'
-      //     }
-      //   ]
-      // }),
-      // 打包分析
       new BundleAnalyzerPlugin({
         logLevel: 'warn',
         openAnalyzer: false,
@@ -220,7 +211,16 @@ const getConfig = (
         // statsFilename: `${moduleName}-report.json`,
         // generateStatsFile: !!args['report-json'],
         // generateStatsFile: true
-      })
+      }),
+      // new CopyWebpackPlugin({
+      //   patterns: [
+      //     {
+      //       from: path.join(process.cwd(), `public/${moduleName}`),
+      //       to: path.join(process.cwd(), `${dest}/${moduleName}/static`),
+      //       toType: 'dir'
+      //     }
+      //   ]
+      // })
     ];
     baseConfig.plugins = baseConfig.plugins.concat(prodPlugin);
   } else {

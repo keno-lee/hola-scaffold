@@ -25,28 +25,9 @@ module.exports = async (configs, devServer, targetModules) => {
     compiler.hooks.done.tap('hola-cli-service serve', (stats) => {
       if (stats.hasErrors()) {
         console.log('编译报错');
-        console.log(stats);
+        // console.log(stats);
         return;
       }
-
-      //  DONE  Compiled successfully in 1924ms
-      //  DONE  Compiled successfully in 5665ms
-      //  App running at:
-      //  - Local:   http://localhost:1123/
-      //  - Network: http://172.16.45.180:1123/
-
-      //  Note that the development build is not optimized.
-      //  To create a production build, run npm run build.
-
-      //  WAIT  Compiling...                    18:47:19
-
-      //  98% after emitting CopyPlugin
-
-      //  DONE  Compiled successfully in 262ms  18:47:20
-
-      //   App running at:
-      //   - Local:   http://localhost:1123/
-      //   - Network: http://172.16.45.180:1123/
 
       console.log();
       console.log(`  App running at:`);

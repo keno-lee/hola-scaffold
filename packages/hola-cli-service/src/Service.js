@@ -5,7 +5,6 @@ const chalk = require('chalk');
 const { getDevServer, getConfigArray } = require('./config/index');
 // const merge = require('webpack-merge')
 
-const fs = require('fs');
 module.exports = class Service {
   constructor(context) {
     this.context = context;
@@ -98,7 +97,7 @@ module.exports = class Service {
     if (command === 'build') {
       const configs = getConfigArray(this.targetModules, {
         ...this.commonOptionObj,
-        environment: args.environment
+        environment: args.environment || 'production'
       });
       await build(configs);
 
@@ -108,7 +107,7 @@ module.exports = class Service {
   }
 };
 
-const loadConfig = (configPath) => {
+function loadConfig(configPath) {
   let fileConfig = require(configPath);
 
   if (typeof fileConfig === 'function') {
@@ -124,4 +123,4 @@ const loadConfig = (configPath) => {
     fileConfig = null;
   }
   return fileConfig;
-};
+}

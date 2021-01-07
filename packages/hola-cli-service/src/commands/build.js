@@ -1,21 +1,19 @@
-module.exports = async configs => {
-  const Webpack = require('webpack')
-  const chalk = require('chalk')
-  const fs = require('fs')
-  const path = require('path')
+module.exports = async (configs) => {
+  const Webpack = require('webpack');
 
   return new Promise((resolve, reject) => {
-    let compiler = Webpack(configs)
+    let compiler = Webpack(configs);
 
     compiler.run((err, stats) => {
       if (err) {
-        return reject(err)
+        return reject(err);
       }
       if (stats.hasErrors()) {
-        console.log('编译报错', stats)
+        console.log('编译报错');
+        // console.log(stats);
       }
 
-      resolve(stats)
-    })
-  })
-}
+      resolve(stats);
+    });
+  });
+};
