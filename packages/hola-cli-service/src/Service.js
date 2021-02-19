@@ -28,9 +28,9 @@ module.exports = class Service {
         resolve();
       } catch (e) {
         if (e.code === 'MODULE_NOT_FOUND') {
-          console.log(`   ${chalk.red('警告: 配置数据加载失败!')}`);
+          console.log(`${chalk.red('警告: 配置数据加载失败!')}`);
           console.log();
-          console.log(`   ${chalk.bold('hola.config.js')} 未找到该文件!!!`);
+          console.log(`${chalk.bold('hola.config.js')} 未找到该文件!!!`);
           console.log();
         } else {
           throw e;
@@ -66,10 +66,13 @@ module.exports = class Service {
    */
   async init(args) {
     console.log();
-    console.log(chalk.green.bold(`   加载配置数据中...`));
-    console.log();
+    console.log(chalk.green.bold(`加载配置...`));
 
     await this.loadUserOption();
+
+    console.log();
+    console.log(chalk.green.bold(`用户配置数据收集完成`));
+    console.log();
 
     // 目标参数模块 [china, us]
     const argsModules = args && args.modules ? args.modules.split(',') : [];
@@ -101,7 +104,8 @@ module.exports = class Service {
       });
       await build(configs);
 
-      console.log(chalk.green.bold(`App build completed!`));
+      // console.log(chalk.green.bold(`App build completed!`));
+      console.log(chalk.green.bold(`项目打包完成，静态资源分析请查看dist输出文件 bundle-analysis-xx.html`));
       console.log();
     }
   }

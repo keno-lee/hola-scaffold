@@ -24,6 +24,10 @@ const OptimizeCssnanoPlugin = require('@intervolga/optimize-cssnano-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 // 拷贝资源到dist中
 // const CopyWebpackPlugin = require('copy-webpack-plugin');
+const ESLintPlugin = require('eslint-webpack-plugin');
+const HappyPack = require('happypack');
+const os = require('os');
+const happyThreadPool = HappyPack.ThreadPool({ size: os.cpus().length });
 
 const getRules = require('./loader');
 // const merge = require('webpack-merge');
@@ -34,10 +38,7 @@ const getRules = require('./loader');
  * @param {environment} 代码运行环境
  * @param {dest} 打包文件夹名称，暂时写死为dist，stage2 根据生产还是测试判断目录
  */
-const getConfig = (
-  moduleOption,
-  { environment = 'development', dest = 'dist', transpileDependencies = [] } = {}
-) => {
+const getConfig = (moduleOption, { environment = 'development', dest = 'dist', transpileDependencies = [] } = {}) => {
   // 获取模块名字
   const { moduleName, moduleEntry, publicPath = {}, env = {} } = moduleOption;
   // production 和 test 均使用生产环境的配置打包
@@ -46,7 +47,7 @@ const getConfig = (
   const publicPathMap = {
     production: publicPath.prod || '/',
     test: publicPath.test || '/',
-    development: '/'
+    development: '/',
   };
 
   let baseConfig = {
@@ -55,7 +56,7 @@ const getConfig = (
     context: process.cwd(),
     devtool: isProd ? 'source-map' : 'cheap-module-eval-source-map',
     entry: {
-      [moduleName]: moduleEntry
+      [moduleName]: moduleEntry,
     },
     output: {
       // /*/*/projectname/dist
@@ -65,15 +66,15 @@ const getConfig = (
       chunkFilename: `${isProd ? 'js/[name].[contenthash:8].js' : 'js/[name].js'}`,
       // CDN服务器地址
       publicPath: publicPathMap[environment],
-      globalObject: "(typeof self !== 'undefined' ? self : this)"
+      globalObject: "(typeof self !== 'undefined' ? self : this)",
     },
     resolve: {
       alias: {
         '@common': path.join(process.cwd(), 'common'),
-        '@app': path.join(process.cwd(), 'app')
+        '@app': path.join(process.cwd(), 'app'),
       },
       extensions: ['.mjs', '.js', '.jsx', '.vue', '.json', '.wasm'],
-      modules: ['node_modules', path.join(process.cwd(), 'node_modules')]
+      modules: ['node_modules', path.join(process.cwd(), 'node_modules')],
     },
     optimization: {
       splitChunks: {
@@ -82,16 +83,16 @@ const getConfig = (
             name: 'chunk-vendors',
             test: /[\\\/]node_modules[\\\/]/,
             priority: -10,
-            chunks: 'initial'
+            chunks: 'initial',
           },
           common: {
             name: 'chunk-common',
             minChunks: 2,
             priority: -20,
             chunks: 'initial',
-            reuseExistingChunk: true
-          }
-        }
+            reuseExistingChunk: true,
+          },
+        },
       },
       minimizer: [
         new TerserPlugin({
@@ -124,12 +125,12 @@ const getConfig = (
               unused: true,
               conditionals: true,
               dead_code: true,
-              evaluate: true
+              evaluate: true,
             },
-            mangle: { safari10: true }
-          }
-        })
-      ]
+            mangle: { safari10: true },
+          },
+        }),
+      ],
     },
     node: {
       setImmediate: false,
@@ -138,26 +139,67 @@ const getConfig = (
       fs: 'empty',
       net: 'empty',
       tls: 'empty',
-      child_process: 'empty'
+      child_process: 'empty',
     },
     module: {
       noParse: /^(vue|vue-router|vuex|vuex-router-sync)$/,
-      rules: getRules(isProd, transpileDependencies)
+      rules: getRules(isProd, transpileDependencies),
     },
     plugins: [
+      new ESLintPlugin(),
+      // 如果希望在webpack运行时，eslint检查vue文件，则使用下面的
+      // new ESLintPlugin({
+      //   extensions: ['.js', '.jsx', '.vue'],
+      // }),
+      new HappyPack({
+        id: 'happyBabel',
+        // 共享进程池
+        threadPool: happyThreadPool,
+        // 日志输出
+        verbose: true,
+        loaders: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                [
+                  '@babel/preset-env',
+                  {
+                    // useBuiltIns: 'entry',
+                    modules: false, // 对 ES6 的模块文件不做转化，便于使用webpack新特性，比如 tree shaking 和 sideEffects
+                    // corejs: 2, // 新版本的@babel/polyfill包含了core-js@2和core-js@3版本，所以需要声明版本，否则webpack运行时会报warning，此处暂时使用core-js@2版本
+                  },
+                ],
+              ],
+              plugins: [
+                [
+                  '@babel/plugin-transform-runtime',
+                  {
+                    corejs: {
+                      version: 3,
+                      proposals: true,
+                    },
+                    useESModules: true,
+                  },
+                ],
+                '@babel/plugin-proposal-class-properties',
+                '@babel/plugin-syntax-dynamic-import',
+              ],
+            },
+          },
+        ],
+      }),
       // webpack 内置插件，用于创建在编译时可以配置的全局常量
       new webpack.DefinePlugin({
         'process.env.CODE_ENV': JSON.stringify(environment),
-        ...env
+        ...env,
       }),
       new VueLoaderPlugin(),
       new CaseSensitivePathsPlugin(),
       new ProgressBarPlugin({
-        format: `${chalk.green.bold('编译中...')} [:bar] ${chalk.green.bold(
-          ':percent'
-        )} (:elapsed seconds) ${moduleName} :msg `,
+        format: `${chalk.green.bold('编译中...')} [:bar] ${chalk.green.bold(':percent')} (:elapsed seconds) ${moduleName} :msg `,
         clear: false,
-        summary: false // 防止和friendly输出冲突
+        summary: false, // 防止和friendly输出冲突
       }),
       new HtmlWebpackPlugin({
         template: path.join(process.cwd(), `app/${moduleName}/index.html`), // 模板路径
@@ -174,19 +216,19 @@ const getConfig = (
               minifyJS: true, // 压缩内联js
               removeComments: true, // 移除注释
               collapseWhitespace: true, // 合并空格
-              removeAttributeQuotes: true // 移除属性的引号
+              removeAttributeQuotes: true, // 移除属性的引号
             }
-          : false
-      })
-    ]
+          : false,
+      }),
+    ],
   };
   if (isProd) {
     let prodPlugin = [
       new CleanWebpackPlugin({
-        cleanOnceBeforeBuildPatterns: path.join(process.cwd(), `${dest}/${moduleName}`)
+        cleanOnceBeforeBuildPatterns: path.join(process.cwd(), `${dest}/${moduleName}`),
       }),
       new MiniCssExtractPlugin({
-        filename: `css/[name].[contenthash:8].css`
+        filename: `css/[name].[contenthash:8].css`,
       }),
       new OptimizeCssnanoPlugin({
         sourceMap: false,
@@ -196,18 +238,18 @@ const getConfig = (
             {
               discardComments: {
                 // 删除全部注释
-                removeAll: true
-              }
-            }
-          ]
-        }
+                removeAll: true,
+              },
+            },
+          ],
+        },
       }),
       new BundleAnalyzerPlugin({
         logLevel: 'warn',
         openAnalyzer: false,
         analyzerMode: 'static',
         // analyzerMode: args.report ? 'static' : 'disabled',
-        reportFilename: `bundle-analysis-${moduleName}.html`
+        reportFilename: `bundle-analysis-${moduleName}.html`,
         // statsFilename: `${moduleName}-report.json`,
         // generateStatsFile: !!args['report-json'],
         // generateStatsFile: true
@@ -229,11 +271,11 @@ const getConfig = (
         options: {},
         multiStep: undefined,
         fullBuildTimeout: 200,
-        requestTimeout: 10000
+        requestTimeout: 10000,
       }),
       // 已被弃用
       // new webpack.NamedModulesPlugin(),
-      new FriendlyErrorsWebpackPlugin()
+      new FriendlyErrorsWebpackPlugin(),
     ];
     baseConfig.plugins = baseConfig.plugins.concat(devPlugin);
   }
@@ -244,7 +286,7 @@ const getConfig = (
 };
 
 // 获取开发服务器配置
-const getDevServer = async function() {
+const getDevServer = async function () {
   // 端口号查找工具
   const portfinder = require('portfinder');
   // ip地址工具
@@ -261,14 +303,14 @@ const getDevServer = async function() {
     clientLogLevel: 'none',
     // 当使用 HTML5 History API 时，任意的 404 响应都可能需要被替代为 index.html。通过传入以下启用
     historyApiFallback: {
-      disableDotRule: true
+      disableDotRule: true,
     },
 
     // 告诉服务器从哪里提供内容。只有在你想要提供静态文件时才需要。默认为使用当前工作目录作为提供内容的目录
     // contentBase是用来指定被访问html页面所在目录的
     // contentBase: '/public',
     // 告诉服务器观看devServer.contentBase选项提供的文件。文件更改将触发整个页面重新加载。
-    watchContentBase: true,
+    // watchContentBase: true,
 
     // 热模块替换
     hot: true,
@@ -284,7 +326,7 @@ const getDevServer = async function() {
     overlay: { warnings: false, errors: true },
     https: false,
     host: host,
-    port: port
+    port: port,
   };
 
   // 合并用户配置
